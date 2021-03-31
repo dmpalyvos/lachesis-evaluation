@@ -27,7 +27,7 @@ cd "$script_dir"
 echo "Compiling Kafka Source"
 sleep 2
 cd kafka-source
-mvn clean compile
+mvn clean package
 
 
 cd "$script_dir/.."
