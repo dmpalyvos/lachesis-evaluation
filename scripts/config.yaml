@@ -1,0 +1,5 @@
+jar: "target/liebre-experiments-{commit_hash}.jar"
+output_folder: "data/output/{experiment_code}"
+cpu_utilization_file: "cpu.csv"
+duration: 1
+sleep_after: 0.15

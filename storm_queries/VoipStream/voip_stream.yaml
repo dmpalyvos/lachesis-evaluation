@@ -1,0 +1,50 @@
+source:
+  - parser
+
+parser:
+  - dispatcher
+
+dispatcher:
+  - ct24
+  - global_acd
+  - ecr24
+  - ecr
+  - encr
+  - pre_rcr
+
+ct24:
+  - acd
+
+global_acd:
+  - acd
+
+ecr24:
+  - acd
+
+acd:
+  - score
+
+pre_rcr:
+  - rcr
+
+ecr:
+  - fofir
+  - url
+
+encr:
+  - url
+
+url:
+ - score
+
+rcr:
+  - fofir
+
+fofir:
+  - score
+
+score:
+  - sink
+
+sink:
+

@@ -1,0 +1,16 @@
+{
+    "timed_source": "kafka",
+    "kafka_topic": "experiment",
+    "chaining": false,
+    "aggressive_chaining": false,
+    "dataset": "BASEDIRHERE/scheduling-queries/datasets/LinearRoad/linear_road.txt",
+    "source": 8,
+    "dispatcher": 8,
+    "toll_notification_pos": 8,
+    "average_speed": 8,
+    "last_average_speed": 8,
+    "toll_notification_las": 8,
+    "count_vehicles": 8,
+    "toll_notification_cv": 8,
+    "sink": 8
+}

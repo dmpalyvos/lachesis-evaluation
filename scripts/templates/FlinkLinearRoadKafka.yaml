@@ -1,0 +1,66 @@
+executor_script: 'scripts/flink_do_run.sh'
+
+dimensions:
+  schema: variant.rate
+  rate:
+    - 3000
+    - 3500
+    - 4000
+    - 4500
+    - 5000
+    - 5500
+    - 6000
+
+
+queries:
+  - name: FlinkLinearRoadKafka
+    reference: LinearRoad.LinearRoad
+
+variants:
+  - name: OS
+    spe_command: "{flink_cmd} {class_name} {query_jar}  --time {duration_seconds} --statisticsFolder {statistics_folder} --kafkaHost {kafka_host}:9092 --conf {query_config_file} {args} {extra_args}"
+    kafka_start_command: "{ssh_cli} {kafka_host} 'BASEDIRHERE/scheduling-queries/kafka-source/start-source.sh {args} --configFile {query_config_file} --graphiteHost {statistics_host}  &>> {kafka_command_log} &'"
+    kafka_stop_command: "{ssh_cli} {kafka_host} 'pkill -f start-source.sh &>> {kafka_command_log} &'"
+    args: ''
+  - name: LACHESIS
+    args: ''
+    kafka_start_command: "{ssh_cli} {kafka_host} 'BASEDIRHERE/scheduling-queries/kafka-source/start-source.sh {args} --configFile {query_config_file} --graphiteHost {statistics_host}  &>> {kafka_command_log} &'"
+    kafka_stop_command: "{ssh_cli} {kafka_host} 'pkill -f start-source.sh &>> {kafka_command_log} &'"
+    spe_command: "{flink_cmd} {class_name} {query_jar} --time {duration_seconds} --statisticsFolder {statistics_folder} --kafkaHost {kafka_host}:9092 --conf {query_config_file} {args} {extra_args}"
+    scheduler_command: "{base_scheduler_cmd}  --statisticsHost {statistics_host} --policy metric:TASK_QUEUE_SIZE_FROM_SUBTASK_DATA:true"
+  - name: RANDOM
+    args: ''
+    kafka_start_command: "{ssh_cli} {kafka_host} 'BASEDIRHERE/scheduling-queries/kafka-source/start-source.sh {args} --configFile {query_config_file} --graphiteHost {statistics_host}  &>> {kafka_command_log} &'"
+    kafka_stop_command: "{ssh_cli} {kafka_host} 'pkill -f start-source.sh &>> {kafka_command_log} &'"
+    spe_command: "{flink_cmd} {class_name} {query_jar} --time {duration_seconds} --statisticsFolder {statistics_folder} --kafkaHost {kafka_host}:9092 --conf {query_config_file} {args} {extra_args}"
+    scheduler_command: "{base_scheduler_cmd}   --statisticsHost {statistics_host} --policy random:true"
+
+
+base_scheduler_cmd: "sudo java -Dname=Lachesis -cp ./lachesis/lachesis-0.1.jar io.palyvos.scheduler.integration.FlinkIntegration --worker TaskManagerRunner --cgroupPolicy one --minPriority 19 --maxPriority -20 --period 1"
+flink_cmd: "BASEDIRHERE/flink-1.11.2/bin/flink run --class"
+query_jar: "BASEDIRHERE/scheduling-queries/flink_queries/LinearRoad/target/LinearRoad-1.0.jar"
+query_config_file: "BASEDIRHERE/scheduling-queries/flink_queries/LinearRoad/Configurations/seqs_kafka.json"
+
+utilization_command: "./scripts/utilization-flink.sh {statistics_host}"
+ssh_cli: ssh -o PasswordAuthentication=no -o KbdInteractiveAuthentication=no -o ChallengeResponseAuthentication=no
+kafka_command_log: BASEDIRHERE/scheduling-queries/kafka-source/command.log
+
+csv_queries:
+  throughput: aliasByNode(*.taskmanager.*.*.Source:-source.*.numRecordsOutPerSecond.m1_rate, 4, 5)
+  sink-throughput: aliasByNode(*.taskmanager.*.*.Sink:-sink.*.numRecordsInPerSecond.m1_rate, 4, 5)
+  latency: aliasByNode(*.taskmanager.*.*.*.*.latency, 4, 5)
+  end-latency: aliasByNode(*.taskmanager.*.*.*.*.latency-ext, 4, 5)
+  external-rate: aliasByNode(kafka.*.external-rate.value, 0, 1)
+  external-queue: aliasByNode(*.taskmanager.*.*.*.*.external-queue-size, 4, 5)
+  input-queue: aliasByNode(*.taskmanager.*.*.*.*.Shuffle.Netty.Input.Buffers.inputQueueLength, 4, 5)
+  output-queue: aliasByNode(*.taskmanager.*.*.*.*.Shuffle.Netty.Output.Buffers.outputQueueLength, 4, 5)
+  cpu: aliasByNode(flink.*.utilization.cpu.percent, 0, 1)
+  memory: aliasByNode(flink.*.utilization.memory.mb, 0, 1)
+  schedule-external: aliasByNode(lachesis.*.schedule.thread.external.*, 1, 5)
+  schedule-internal: aliasByNode(lachesis.*.schedule.thread.internal.*, 1, 5)
+  scheduler-cpu: aliasByNode(lachesis.*.utilization.cpu.percent, 0, 1)
+  graphite-cpu: aliasByNode(graphite.*.utilization.cpu.percent, 0, 1)
+  scheduler-memory: aliasByNode(lachesis.*.utilization.memory.mb, 0, 1)
+  writes: aliasByNode(*.taskmanager.*.*.*.*.numRecordsOutPerSecond.m1_rate, 4, 5)
+  reads: aliasByNode(*.taskmanager.*.*.*.*.numRecordsInPerSecond.m1_rate, 4, 5)
+  

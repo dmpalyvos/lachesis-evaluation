@@ -1,0 +1,27 @@
+version: "2"
+services:
+    graphite:
+        container_name: graphite
+        image: graphiteapp/graphite-statsd
+        cpuset: 0-3
+        logging:
+            driver:
+                none
+        ports:
+            - "80:80"
+            - "8000:8000"
+            - "2003:2003"
+            - "2004:2004"
+            - "8125:8125/udp"
+            - "8126:8126"
+        volumes:
+            - "./graphite/conf:/opt/graphite/conf"
+            - "./graphite/storage:/opt/graphite/storage"
+            - "./graphite/statsd_config:/opt/statsd/config"
+        networks:
+            - graphite-net
+        environment:
+            - GRAPHITE_DEFAULT_CACHE_DURATION=1
+
+networks:
+    graphite-net: {}

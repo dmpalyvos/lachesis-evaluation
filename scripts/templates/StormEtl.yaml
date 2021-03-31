@@ -1,0 +1,66 @@
+executor_script: 'scripts/storm_do_run.sh'
+
+dimensions:
+  schema: variant.rate
+  rate:
+    - 1000
+    - 1125
+    - 1250
+    - 1375
+    - 1500
+    - 1625
+    - 1750
+    - 1875
+    - 2000
+
+queries:
+  - name: StormETL
+    reference: in.dream_lab.bm.stream_iot.storm.topo.apps.ETLTopology
+
+variants:
+  - name: OS
+    spe_command: "{storm_jar} jar {query_jar} -Dname=Storm {class_name} L {topology_name} {dataset_filename} 1 1 {topology_output_dir} {query_properties} {topology_name} {stream_length} {num_workers} 1 --rate {rate} --statisticsFolder {statistics_folder} {extra_args}"
+    args: ''
+  - name: LACHESIS
+    args: ''
+    spe_command: "{storm_jar} jar {query_jar} -Dname=Storm {class_name} L {topology_name} {dataset_filename} 1 1 {topology_output_dir} {query_properties} {topology_name} {stream_length} {num_workers} 1 --rate {rate} --statisticsFolder {statistics_folder} {extra_args}"
+    scheduler_command: >
+      sudo java -Dname=Lachesis -cp ./lachesis/lachesis-0.1.jar
+      io.palyvos.scheduler.integration.StormIntegration --minPriority 19 
+      --maxPriority -20  --statisticsFolder {statistics_folder} --statisticsHost {statistics_host} --logarithmic --period 1
+      --cgroupPolicy one --worker ETLTopology --policy metric:TASK_QUEUE_SIZE_FROM_SUBTASK_DATA:true
+      --queryGraph BASEDIRHERE/EdgeWISE-Benchmarks/query_graphs/etl.yaml
+  - name: EDGEWISE
+    spe_command: "{storm_edgewise_jar} jar {query_jar} -Dname=Storm {class_name} L {topology_name} {dataset_filename} 1 1 {topology_output_dir} {query_properties} {topology_name} {stream_length} {num_workers} 30 --rate {rate} --statisticsFolder {statistics_folder} {extra_args}"
+    args: ''
+
+topology_name: ETL
+storm_jar: BASEDIRHERE/apache-storm-1.1.0/bin/storm
+storm_edgewise_jar: BASEDIRHERE/apache-storm-edgewise-1.1.0/bin/storm
+query_jar: BASEDIRHERE/EdgeWISE-Benchmarks/modules/storm/target/iot-bm-storm-0.1-jar-with-dependencies.jar
+dataset_filename: SYS_sample_data_senml.csv
+topology_output_dir: BASEDIRHERE/EdgeWISE-Benchmarks/scripts/
+query_properties: etl_topology.properties 
+stream_length: 2000000
+num_workers: 1
+
+utilization_command: "./scripts/utilization-storm.sh {statistics_host}"
+
+csv_queries:
+  throughput: aliasByNode(Storm.*.*.*.spout.*.emit-count.default.value, 4, 5)
+  sink-throughput: aliasByNode(Storm.*.*.*.*Sink.*.execute-count.*.value, 4, 5, 7)
+  external-rate: aliasByNode(Storm.*.*.*.*.*.external-rate.*, 4, 5)
+  latency: aliasByNode(Storm.*.*.*.*.*.total-latency.*, 4, 5)
+  end-latency: aliasByNode(Storm.*.*.*.*.*.total-latency-ext.*, 4, 5)
+  input-queue: aliasByNode(Storm.*.*.*.*.*.receive.population.value, 4, 5)
+  output-queue: aliasByNode(Storm.*.*.*.*.*.sendqueue.population.value, 4, 5)
+  cpu: aliasByNode(Storm.*.utilization.cpu.percent, 0, 1)
+  memory: aliasByNode(Storm.*.utilization.memory.mb, 0, 1)
+  external-queue: aliasByNode(Storm.*.*.*.*.*.external-queue-size.*, 4, 5)
+  schedule-external: aliasByNode(lachesis.*.schedule.thread.external.*, 1, 5)
+  schedule-internal: aliasByNode(lachesis.*.schedule.thread.internal.*, 1, 5)
+  scheduler-cpu: aliasByNode(lachesis.*.utilization.cpu.percent, 0, 1)
+  graphite-cpu: aliasByNode(graphite.*.utilization.cpu.percent, 0, 1)
+  scheduler-memory: aliasByNode(lachesis.*.utilization.memory.mb, 0, 1)
+  writes: aliasByNode(Storm.*.*.*.*.*.emit-count.*.value, 4, 5, 7)
+  reads: aliasByNode(Storm.*.*.*.*.*.execute-count.*.value, 4, 5, 7)

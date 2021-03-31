@@ -1,0 +1,28 @@
+source:
+  - dispatcher
+
+dispatcher:
+  - average_speed
+  - count_vehicles
+  - toll_notification_pos
+
+average_speed:
+  - last_average_speed
+
+last_average_speed:
+  - toll_notification_las
+
+toll_notification_las:
+  - sink
+
+count_vehicles:
+  - toll_notification_cv
+
+toll_notification_cv:
+  - sink
+
+toll_notification_pos:
+  - sink
+
+sink:
+

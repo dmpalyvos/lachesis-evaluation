@@ -1,0 +1,8 @@
+baseRate: 2000
+batchSize: 25
+burstDurationMillis: 0
+burstPeriodMillis: 10000
+burstRate: 0
+intraThreadFunctionKey: MaxLatency
+rate: 850
+schedulingPeriodMillis: 500

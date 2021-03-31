@@ -1,0 +1,55 @@
+#!/usr/bin/env bash
+
+
+KAFKA_COMMAND_LOG="BASEDIRHERE/scheduling-queries/kafka-source/command.log"
+STORM_VS_CONFIG="BASEDIRHERE/scheduling-queries/storm_queries/VoipStream/Configurations/seqs_kafka_odroid_multi.json"
+FLINK_LR_CONFIG="BASEDIRHERE/scheduling-queries/flink_queries/LinearRoad/Configurations/seqs_kafka_odroid_multi.json"
+VS_KAFKA_TOPIC="storm-vs"
+LR_KAFKA_TOPIC="flink-lr"
+KAFKA_HOST=""
+
+declare -a LR_ARGS=()
+declare -a VS_ARGS=()
+
+LR_MAX_RATE="3000"
+VS_MAX_RATE="1800"
+
+# Interprent the rate as the percentage of the total rate defined above
+while :; do
+    case $1 in
+        --rate) 
+            percentage="$2"
+            (( percentage > 100 )) && { echo "Please define rate as percentage!"; exit 1; }
+            lr_rate=$(( (percentage * LR_MAX_RATE) / 100 ))
+            vs_rate=$(( (percentage * VS_MAX_RATE) / 100 ))
+            echo "LR Rate = $lr_rate"
+            echo "VS Rate = $vs_rate"
+            VS_ARGS+=("$1")
+            VS_ARGS+=("$vs_rate")
+            LR_ARGS+=("$1")
+            LR_ARGS+=("$lr_rate")
+            shift
+            ;;
+        --kafka) 
+            KAFKA_HOST="$2"
+            shift
+            ;;
+        --) # End of all options.
+            shift
+            break
+            ;;
+        *) 
+            LR_ARGS+=("$1")
+            VS_ARGS+=("$1")
+            ;;
+    esac
+    shift
+done
+
+[[ -n "$KAFKA_HOST" ]] || { echo "Please provide kafka host with --kafka"; exit 1; }
+
+set -x 
+
+ssh "$KAFKA_HOST" "BASEDIRHERE/scheduling-queries/kafka-source/start-source.sh --topic $VS_KAFKA_TOPIC --configFile $STORM_VS_CONFIG ${VS_ARGS[@]} &>> $KAFKA_COMMAND_LOG &"
+
+ssh "$KAFKA_HOST" "BASEDIRHERE/scheduling-queries/kafka-source/start-source.sh --topic $LR_KAFKA_TOPIC --configFile $FLINK_LR_CONFIG ${LR_ARGS[@]} &>> $KAFKA_COMMAND_LOG &"

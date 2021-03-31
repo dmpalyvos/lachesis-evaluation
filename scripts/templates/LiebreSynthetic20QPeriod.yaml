@@ -1,0 +1,67 @@
+executor_script: './scripts/liebre_do_run.sh'
+
+dimensions:
+  schema: variant.rate
+  rate:
+    - 1000
+    - 1125
+    - 1250
+    - 1375
+    - 1500
+    - 1625
+    - 1750
+    - 2000
+
+
+queries:
+  - name: LiebreSynthetic20QPeriod
+    reference: queries.synthetic.queries.Chain
+
+variants:
+  - name: LACHESIS
+    args: '--experimentName LACHESIS'
+    spe_command: >
+      {base_cmd} {jvm_args} -cp {query_jar} 
+      {class_name} --statisticsFolder {statistics_folder} --durationSeconds {duration_seconds} --randomSeed 0 
+      --statisticsHost {statistics_host} --kafkaHost {kafka_host} --kafkaTopic experiment {args} {experiment_args} {extra_args}
+    scheduler_command: "sudo java -Dname=Lachesis -cp ./lachesis/lachesis-0.1.jar io.palyvos.scheduler.integration.LiebreIntegration --period 1 --policy none --cgroupPolicy operator-metric:TASK_LATENCY --cgroupPeriod 1 --queryGraph {statistics_folder}/query_dag.yaml --worker queries.synthetic.queries.Chain --log INFO --statisticsFolder {statistics_folder} --statisticsHost {statistics_host}"
+    kafka_start_command: "ssh {kafka_host} 'BASEDIRHERE/scheduling-queries/kafka-source/start-source.sh --sleep 15 {args} --inputFile DUMMY --graphiteHost {statistics_host}  &>> {kafka_command_log} &'"
+    kafka_stop_command: "ssh {kafka_host} 'pkill -f start-source.sh &>> {kafka_command_log} &'"
+  - name: HAREN
+    spe_command: >
+      {base_cmd} {jvm_args} -cp {query_jar} 
+      {class_name} --statisticsFolder {statistics_folder} --durationSeconds {duration_seconds} --randomSeed 0 
+      --statisticsHost {statistics_host} --kafkaHost {kafka_host} --kafkaTopic experiment {args} {experiment_args} {extra_args}
+    args: "--scheduling --schedulingPeriodMillis 50 --priorityFunction HEAD_ARRIVAL_TIME --experimentName HAREN --batchSize 10 --deploymentFunction RANDOM_OPERATOR --priorityCaching"
+    kafka_start_command: "ssh {kafka_host} 'BASEDIRHERE/scheduling-queries/kafka-source/start-source.sh --sleep 15 {args} --inputFile DUMMY --graphiteHost {statistics_host}  &>> {kafka_command_log} &'"
+    kafka_stop_command: "ssh {kafka_host} 'pkill -f start-source.sh &>> {kafka_command_log} &'"
+  - name: HAREN-1000
+    spe_command: >
+      {base_cmd} {jvm_args} -cp {query_jar} 
+      {class_name} --statisticsFolder {statistics_folder} --durationSeconds {duration_seconds} --randomSeed 0 
+      --statisticsHost {statistics_host} --kafkaHost {kafka_host} --kafkaTopic experiment {args} {experiment_args} {extra_args}
+    args: "--scheduling --schedulingPeriodMillis 1000 --priorityFunction HEAD_ARRIVAL_TIME --experimentName HAREN --batchSize 10 --deploymentFunction RANDOM_OPERATOR --priorityCaching"
+    kafka_start_command: "ssh {kafka_host} 'BASEDIRHERE/scheduling-queries/kafka-source/start-source.sh --sleep 15 {args} --inputFile DUMMY --graphiteHost {statistics_host}  &>> {kafka_command_log} &'"
+    kafka_stop_command: "ssh {kafka_host} 'pkill -f start-source.sh &>> {kafka_command_log} &'"
+
+query_jar: ./liebre_queries/liebre-experiments-latest.jar
+base_cmd: java -Dname=Liebre -Xmx1g
+
+experiment_args: "--cost 400 --selectivity 1 --chainLength 3 --nqueries 20 --varianceFactor 5 --sourceAffinity 0,1,2,3 --workerAffinity 4,5,6,7 --maxThreads 4 --autoFlush"
+
+utilization_command: './scripts/utilization-liebre.sh {statistics_host}'
+kafka_command_log: BASEDIRHERE/scheduling-queries/kafka-source/command.log
+
+csv_queries:
+  external-rate: aliasByNode(kafka.*.external-rate.value, 0, 1)
+  input-queue: aliasByNode(liebre.*.*.QUEUE_SIZE, 2)
+  external-queue: aliasByNode(liebre.*.*.EXTERNAL_QUEUE_SIZE, 2)
+  cpu: aliasByNode(liebre.*.utilization.cpu.percent, 0, 1)
+  memory: aliasByNode(liebre.*.utilization.memory.mb, 0, 1)
+  schedule-external: aliasByNode(lachesis.*.schedule.thread.external.*, 1, 5)
+  schedule-internal: aliasByNode(lachesis.*.schedule.thread.internal.*, 1, 5)
+  cg-schedule-external: aliasByNode(lachesis.*.schedule.cgroup.external.*.*.*, 1, 5, 6, 7)
+  cg-schedule-internal: aliasByNode(lachesis.*.schedule.cgroup.internal.*.*, 1, 5, 6)
+  scheduler-cpu: aliasByNode(lachesis.*.utilization.cpu.percent, 0, 1)
+  graphite-cpu: aliasByNode(graphite.*.utilization.cpu.percent, 0, 1)
+  scheduler-memory: aliasByNode(lachesis.*.utilization.memory.mb, 0, 1))

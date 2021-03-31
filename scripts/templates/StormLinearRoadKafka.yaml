@@ -1,0 +1,66 @@
+executor_script: 'scripts/storm_do_run.sh'
+
+dimensions:
+  schema: variant.rate
+  rate:
+    - 4000
+    - 4500
+    - 5000
+    - 5500
+    - 6000
+    - 6500
+    - 7000
+    - 7500
+
+queries:
+  - name: StormLinearRoadKafka
+    reference: LinearRoad.LinearRoad
+
+variants:
+  - name: OS
+    spe_command: "{base_storm_cmd} --time {duration_seconds} --kafkaHost {kafka_host}:9092 --conf {query_config_file} --rate {rate} --statisticsFolder {statistics_folder} {extra_args}"
+    kafka_start_command: "{ssh_cli} {kafka_host} 'BASEDIRHERE/scheduling-queries/kafka-source/start-source.sh {args} --configFile {query_config_file} --graphiteHost {statistics_host}  &>> {kafka_command_log} &'"
+    kafka_stop_command: "{ssh_cli} {kafka_host} 'pkill -f start-source.sh &>> {kafka_command_log} &'"
+    args: ''
+  - name: LACHESIS
+    kafka_start_command: "{ssh_cli} {kafka_host} 'BASEDIRHERE/scheduling-queries/kafka-source/start-source.sh {args} --configFile {query_config_file} --graphiteHost {statistics_host}  &>> {kafka_command_log} &'"
+    kafka_stop_command: "{ssh_cli} {kafka_host} 'pkill -f start-source.sh &>> {kafka_command_log} &'"
+    args: ''
+    spe_command: "{base_storm_cmd} --time {duration_seconds} --kafkaHost {kafka_host}:9092 --conf {query_config_file} --rate {rate} --statisticsFolder {statistics_folder} {extra_args}"
+    scheduler_command: "{base_scheduler_cmd}  --statisticsHost {statistics_host} --policy metric:TASK_QUEUE_SIZE_FROM_SUBTASK_DATA:true"
+  - name: RANDOM
+    kafka_start_command: "{ssh_cli} {kafka_host} 'BASEDIRHERE/scheduling-queries/kafka-source/start-source.sh {args} --configFile {query_config_file} --graphiteHost {statistics_host}  &>> {kafka_command_log} &'"
+    kafka_stop_command: "{ssh_cli} {kafka_host} 'pkill -f start-source.sh &>> {kafka_command_log} &'"
+    args: ''
+    spe_command: "{base_storm_cmd} --time {duration_seconds} --kafkaHost {kafka_host}:9092 --conf {query_config_file} --rate {rate} --statisticsFolder {statistics_folder} {extra_args}"
+    scheduler_command: "{base_scheduler_cmd}  --statisticsHost {statistics_host} --policy random:true"
+
+base_scheduler_cmd: "sudo java -Dname=Lachesis -cp ./lachesis/lachesis-0.1.jar io.palyvos.scheduler.integration.StormIntegration --logarithmic --worker LinearRoad --queryGraph BASEDIRHERE/scheduling-queries/storm_queries/LinearRoad/linear_road.yaml --cgroupPolicy one --minPriority 19 --maxPriority -20 --period 1"
+base_storm_cmd: >
+  BASEDIRHERE/apache-storm-1.2.3/bin/storm jar
+  BASEDIRHERE/scheduling-queries/storm_queries/LinearRoad/target/LinearRoad-1.0-SNAPSHOT.jar -Xmx1000m -Dname=Storm LinearRoad.LinearRoad 
+
+query_config_file: BASEDIRHERE/scheduling-queries/storm_queries/LinearRoad/Configurations/seqs_kafka.json
+utilization_command: "./scripts/utilization-storm.sh {statistics_host}"
+ssh_cli: ssh -o PasswordAuthentication=no -o KbdInteractiveAuthentication=no -o ChallengeResponseAuthentication=no
+kafka_command_log: BASEDIRHERE/scheduling-queries/kafka-source/command.log
+
+
+csv_queries:
+  throughput: aliasByNode(Storm.*.*.*.source.*.emit-count.default.value, 4, 5)
+  sink-throughput: aliasByNode(Storm.*.*.*.sink.*.execute-count.*.value, 4, 5, 7)
+  external-rate: aliasByNode(kafka.*.external-rate.value, 0, 1)
+  latency: aliasByNode(Storm.*.*.*.*.*.total-latency.*, 4, 5)
+  end-latency: aliasByNode(Storm.*.*.*.*.*.total-latency-ext.*, 4, 5)
+  input-queue: aliasByNode(Storm.*.*.*.*.*.receive.population.value, 4, 5)
+  output-queue: aliasByNode(Storm.*.*.*.*.*.sendqueue.population.value, 4, 5)
+  cpu: aliasByNode(Storm.*.utilization.cpu.percent, 0, 1)
+  memory: aliasByNode(Storm.*.utilization.memory.mb, 0, 1)
+  external-queue: aliasByNode(Storm.*.*.*.*.*.external-queue-size.*, 4, 5)
+  schedule-external: aliasByNode(lachesis.*.schedule.thread.external.*, 1, 5)
+  schedule-internal: aliasByNode(lachesis.*.schedule.thread.internal.*, 1, 5)
+  scheduler-cpu: aliasByNode(lachesis.*.utilization.cpu.percent, 0, 1)
+  graphite-cpu: aliasByNode(graphite.*.utilization.cpu.percent, 0, 1)
+  scheduler-memory: aliasByNode(lachesis.*.utilization.memory.mb, 0, 1)
+  writes: aliasByNode(Storm.*.*.*.*.*.emit-count.*.value, 4, 5, 7)
+  reads: aliasByNode(Storm.*.*.*.*.*.execute-count.*.value, 4, 5, 7)
