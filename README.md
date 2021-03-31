@@ -1,12 +1,13 @@
 # Evaluation Artifacts for Lachesis
 
-This repository contains all the necessary scripts to execute the experimental evaluation of: ***"Lachesis: A Standalone Stream-Aware OS Scheduling Framework"***.
+This repository contains all the necessary scripts to execute the experimental evaluation of: ***"Lachesis: A Standalone Stream-Aware OS Scheduling Framework"***. 
 
-It will automatically fetch any other required repositories, so you only need to follow the instructions below to reproduce the experiments presented in the paper.
+The implementation of Lachesis is in a separate repository, [acessible here](https://github.com/dmpalyvos/lachesis).
+
+The scripts in this repository will automatically fetch any other required repositories, so you only need to follow the instructions below to reproduce the experiments presented in the paper.
 
 Related repositories:
 
-- [Lachesis](https://github.com/dmpalyvos/lachesis)
 - [EdgeWise-Benchmarks (Lachesis version)](https://github.com/dmpalyvos/EdgeWISE-Benchmarks)
 - [Liebre](https://github.com/vincenzo-gulisano/Liebre)
 
