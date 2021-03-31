@@ -13,6 +13,7 @@ REPS="$1"
 DURATION="$2"
 KAFKA_HOST="$3"
 DATE_CODE=$(date +%j_%H%M)
+COMMIT_CODE=$(git rev-parse --short HEAD)
 EXPERIMENT_FOLDER="${COMMIT_CODE}_${DATE_CODE}"
 
 

@@ -11,6 +11,7 @@ function usage() {
 REPS="$1"
 DURATION="$2"
 DATE_CODE=$(date +%j_%H%M)
+COMMIT_CODE=$(git rev-parse --short HEAD)
 EXPERIMENT_FOLDER="${COMMIT_CODE}_${DATE_CODE}"
 
 ./scripts/run.py ./scripts/templates/StormStats.yaml -d "$DURATION" -r "$REPS" --statisticsHost "$(hostname)" -c "$DATE_CODE"
