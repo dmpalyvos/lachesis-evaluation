@@ -380,21 +380,20 @@ def basicPerformancePlot(rates, metric, metric_data, metric_title, metric_scale=
     save_fig(g.fig, f'{metric}', experimentId(), export=export)
 
 
-def queueSizeBoxPlots(export):
-    aggregated = DATA[(DATA.parameter == 'input-queue')]
+def queueSizeBoxPlots(rates, export):
+    aggregated = DATA[(DATA.parameter == 'input-queue') & (DATA.rate.isin(rates))]
     aggregated = aggregated[~(aggregated.node.str.contains('system|spout'))].copy()
-#     aggregated.node = aggregated.node.str.split('\.', expand=True)[0]
     aggregated = aggregated.groupby(['rate', 'variant', 'node'])\
                                              .aggregate({'value': np.mean}).reset_index()
-    g = sns.catplot(data=aggregated, x='rate', y='value', hue='variant', 
+    g = sns.catplot(data=aggregated, x='rate', y='value', color='C0',
                     col='variant', height=2.25, aspect=0.9, kind='box')
     g.set_titles('{col_name}')
     g.set_ylabels('Input Queue Sizes')
     g.set_xlabels('Input Rate (t/s)')
-#     for ax in g.axes.flat:
-#         ax.set_yscale('log')
+    for ax in g.axes.flat:
+        ax.set_yscale('log')
     g.fig.autofmt_xdate(rotation=70, ha='center')
-    save_fig(g.fig, 'qs-hist', experimentId(), export)
+    save_fig(g.fig, 'qs-hist', experimentId(), export))
 
 
 def multiPolicyPerformancePlot(rates, export=False):
