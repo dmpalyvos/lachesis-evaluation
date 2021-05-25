@@ -22,5 +22,6 @@ while sleep 1; do
     recordUtilization "name=Lachesis" "lachesis"
     recordUtilization "org.apache.flink.runtime.taskexecutor.TaskManagerRunner" "flink"
     recordUtilization "name=Storm" "Storm"
+    recordUtilization "name=Liebre" "liebre"
     recordUtilization "/opt/graphite" "graphite"
 done

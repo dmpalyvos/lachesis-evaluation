@@ -1,0 +1,50 @@
+executor_script: 'scripts/server_multi_do_run.sh'
+
+# Rates are defined as a percentage of the maximum rate, defined in kafka_start_script
+dimensions:
+  schema: variant.rate
+  rate:
+    - 50
+    - 60
+    - 70
+    - 80
+    - 90
+    - 100
+
+queries:
+  - name: MultiSpeServer
+    reference: undefined
+
+variants:
+  - name: OS
+    spe_command: "{spe_script} --time {duration_seconds} --statisticsFolder {statistics_folder} --kafkaHost {kafka_host}:9092 --statisticsHost {statistics_host} {args} {extra_args} --"
+    args: ''
+    kafka_start_command: "{kafka_start_script} --kafka {kafka_host} --graphiteHost {statistics_host} --rate {rate} --"
+    kafka_stop_command: "{kafka_stop_script} --kafka {kafka_host} --"
+  - name: LACHESIS
+    args: ''
+    spe_command: "{spe_script} --time {duration_seconds} --statisticsFolder {statistics_folder} --kafkaHost {kafka_host}:9092 --statisticsHost {statistics_host}{args} {extra_args} --"
+    kafka_start_command: "{kafka_start_script} --kafka {kafka_host} --graphiteHost {statistics_host} --rate {rate} --"
+    kafka_stop_command: "{kafka_stop_script} --kafka {kafka_host} --"
+    scheduler_command: >
+      sudo java -Dname=Lachesis -cp ./lachesis/lachesis-0.1.jar
+      io.palyvos.scheduler.integration.ThreeSpeIntegration --cgroupPolicy spe --cgroupPeriod 100 --minPriority 19 
+    --maxPriority -20  --statisticsFolder {statistics_folder} --statisticsHost {statistics_host} --period 1 
+      --worker VoipStream.VoipStream --worker TaskManagerRunner --worker queries.synthetic.queries.Chain --queryGraph BASEDIRHERE/scheduling-queries/storm_queries/VoipStream/voip_stream.yaml --queryGraph {statistics_folder}/query_dag.yaml --policy metric:TASK_QUEUE_SIZE_FROM_SUBTASK_DATA:true 
+
+kafka_start_script: "./scripts/templates/helpers/multi-3-spe/helper-start-kafkas.sh"
+kafka_stop_script: "./scripts/templates/helpers/multi-3-spe/helper-stop-kafkas.sh"
+spe_script: "./scripts/templates/helpers/multi-3-spe/helper-start-spes.sh"
+utilization_command: "./scripts/utilization-multi.sh {statistics_host}"
+
+csv_queries:
+  external-rate: aliasByNode(kafka.*.external-rate.value, 0, 1)
+  input-queue: group(aliasByNode(Storm.*.*.*.*.*.*.*.*.receive.population.value, 0, 7, 8), aliasByNode(*.taskmanager.*.*.*.*.Shuffle.Netty.Input.Buffers.inputQueueLength, 1, 4, 5), aliasByNode(liebre.*.*.QUEUE_SIZE, 0, 2))
+  output-queue: group(aliasByNode(Storm..*.*.*.*.*.*.*.*.sendqueue.population.value, 0, 7, 8), aliasByNode(*.taskmanager.*.*.*.*.Shuffle.Netty.Output.Buffers.outputQueueLength, 1, 4, 5))
+  cpu: aliasByNode({Storm,flink,liebre}.*.utilization.cpu.percent, 0, 1)
+  memory: aliasByNode({Storm,flink,liebre}.*.utilization.memory.mb, 0, 1)
+  schedule-external: aliasByNode(lachesis.*.schedule.thread.external.*, 1, 5)
+  schedule-internal: aliasByNode(lachesis.*.schedule.thread.internal.*, 1, 5)
+  scheduler-cpu: aliasByNode(lachesis.*.utilization.cpu.percent, 0, 1)
+  graphite-cpu: aliasByNode(graphite.*.utilization.cpu.percent, 0, 1)
+  scheduler-memory: aliasByNode(lachesis.*.utilization.memory.mb, 0, 1)

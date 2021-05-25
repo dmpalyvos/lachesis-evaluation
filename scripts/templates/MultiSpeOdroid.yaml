@@ -29,7 +29,7 @@ variants:
     kafka_stop_command: "{kafka_stop_script} --kafka {kafka_host} --"
     scheduler_command: >
       sudo java -Dname=Lachesis -cp ./lachesis/lachesis-0.1.jar
-      io.palyvos.scheduler.integration.MultiSpeIntegration --cgroupPolicy spe --cgroupPeriod 100 --minPriority 19 
+      io.palyvos.scheduler.integration.TwoSpeIntegration --cgroupPolicy spe --cgroupPeriod 100 --minPriority 19 
       --maxPriority -20  --statisticsFolder {statistics_folder} --statisticsHost {statistics_host} --period 1
       --worker VoipStream.VoipStream --worker TaskManagerRunner  --queryGraph BASEDIRHERE/scheduling-queries/storm_queries/VoipStream/voip_stream.yaml --policy metric:TASK_QUEUE_SIZE_FROM_SUBTASK_DATA:true 
 

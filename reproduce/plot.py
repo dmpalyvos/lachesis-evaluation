@@ -393,7 +393,7 @@ def queueSizeBoxPlots(rates, export):
     for ax in g.axes.flat:
         ax.set_yscale('log')
     g.fig.autofmt_xdate(rotation=70, ha='center')
-    save_fig(g.fig, 'qs-hist', experimentId(), export))
+    save_fig(g.fig, 'qs-hist', experimentId(), export)
 
 
 def multiPolicyPerformancePlot(rates, export=False):

@@ -21,6 +21,6 @@ EXPERIMENT_FOLDER="${COMMIT_CODE}_${DATE_CODE}"
 
 ../flink-1.11.2/bin/stop-cluster.sh
 
-./scripts/run.py ./scripts/templates/MultiSpeOdroid.yaml -d "$DURATION" -r "$REPS" --statisticsHost "$STATISTICS_HOST" --kafkaHost "$KAFKA_HOST" -c "$DATE_CODE"
+./scripts/run.py ./scripts/templates/MultiSpeServer.yaml -d "$DURATION" -r "$REPS" --statisticsHost "$STATISTICS_HOST" --kafkaHost "$KAFKA_HOST" -c "$DATE_CODE"
 
 ./reproduce/plot.py --plots multi-spe --path "data/output/$EXPERIMENT_FOLDER"
