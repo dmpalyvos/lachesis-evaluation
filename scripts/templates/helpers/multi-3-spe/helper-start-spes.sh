@@ -46,8 +46,8 @@ stormPid=""
 liebrePid=""
 
 
-STORM_VS_CONFIG="/home/dimitris/lachesis-experiments/scheduling-queries/storm_queries/VoipStream/Configurations/seqs_kafka_odroid_multi.json"
-FLINK_LR_CONFIG="/home/dimitris/lachesis-experiments/scheduling-queries/flink_queries/LinearRoad/Configurations/seqs_kafka_odroid_multi.json"
+STORM_VS_CONFIG="BASEDIRHERE/scheduling-queries/storm_queries/VoipStream/Configurations/seqs_kafka_odroid_multi.json"
+FLINK_LR_CONFIG="BASEDIRHERE/scheduling-queries/flink_queries/LinearRoad/Configurations/seqs_kafka_odroid_multi.json"
 SYN_KAFKA_TOPIC="liebre-syn"
 
 on_exit() {
@@ -67,13 +67,13 @@ liebrePid="$!"
 
 # Start Flink Queries
 
-/home/dimitris/lachesis-experiments/flink-1.11.2/bin/flink run --class LinearRoad.LinearRoad /home/dimitris/lachesis-experiments/scheduling-queries/flink_queries/LinearRoad/target/LinearRoad-1.0.jar --conf "$FLINK_LR_CONFIG"  "${LR_ARGS[@]}" &
+BASEDIRHERE/flink-1.11.2/bin/flink run --class LinearRoad.LinearRoad BASEDIRHERE/scheduling-queries/flink_queries/LinearRoad/target/LinearRoad-1.0.jar --conf "$FLINK_LR_CONFIG"  "${LR_ARGS[@]}" &
 
 flinkPid="$!"
 
 # Start Storm Queries
 
-/home/dimitris/lachesis-experiments/distributed-apache-storm-1.2.3/bin/storm jar /home/dimitris/lachesis-experiments/scheduling-queries/storm_queries/VoipStream/target/VoipStream-1.0-SNAPSHOT.jar -Xmx8g -Dname=Storm VoipStream.VoipStream --conf "$STORM_VS_CONFIG" "${VS_ARGS[@]}" &
+BASEDIRHERE/distributed-apache-storm-1.2.3/bin/storm jar BASEDIRHERE/scheduling-queries/storm_queries/VoipStream/target/VoipStream-1.0-SNAPSHOT.jar -Xmx8g -Dname=Storm VoipStream.VoipStream --conf "$STORM_VS_CONFIG" "${VS_ARGS[@]}" &
 
 stormPid="$!"
 

@@ -29,7 +29,7 @@ variants:
     scheduler_command: >
       sudo java -Dname=Lachesis -cp ./lachesis/lachesis-0.1.jar
       io.palyvos.scheduler.integration.ThreeSpeIntegration --cgroupPolicy spe --cgroupPeriod 100 --minPriority 19 
-    --maxPriority -20  --statisticsFolder {statistics_folder} --statisticsHost {statistics_host} --period 1 
+      --maxPriority -20  --statisticsFolder {statistics_folder} --statisticsHost {statistics_host} --period 1 
       --worker VoipStream.VoipStream --worker TaskManagerRunner --worker queries.synthetic.queries.Chain --queryGraph BASEDIRHERE/scheduling-queries/storm_queries/VoipStream/voip_stream.yaml --queryGraph {statistics_folder}/query_dag.yaml --policy metric:TASK_QUEUE_SIZE_FROM_SUBTASK_DATA:true 
 
 kafka_start_script: "./scripts/templates/helpers/multi-3-spe/helper-start-kafkas.sh"

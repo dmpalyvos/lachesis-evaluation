@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 
 KAFKA_HOST=""
-KAFKA_COMMAND_LOG="/home/dimitris/lachesis-experiments/scheduling-queries/kafka-source/command.log"
+KAFKA_COMMAND_LOG="BASEDIRHERE/scheduling-queries/kafka-source/command.log"
 
 # Convert LR rate based on VS rate
 while :; do

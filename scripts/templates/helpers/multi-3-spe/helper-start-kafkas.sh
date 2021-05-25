@@ -1,9 +1,9 @@
 #!/usr/bin/env bash
 
 
-KAFKA_COMMAND_LOG="/home/dimitris/lachesis-experiments/scheduling-queries/kafka-source/command.log"
-STORM_VS_CONFIG="/home/dimitris/lachesis-experiments/scheduling-queries/storm_queries/VoipStream/Configurations/seqs_kafka_odroid_multi.json"
-FLINK_LR_CONFIG="/home/dimitris/lachesis-experiments/scheduling-queries/flink_queries/LinearRoad/Configurations/seqs_kafka_odroid_multi.json"
+KAFKA_COMMAND_LOG="BASEDIRHERE/scheduling-queries/kafka-source/command.log"
+STORM_VS_CONFIG="BASEDIRHERE/scheduling-queries/storm_queries/VoipStream/Configurations/seqs_kafka_odroid_multi.json"
+FLINK_LR_CONFIG="BASEDIRHERE/scheduling-queries/flink_queries/LinearRoad/Configurations/seqs_kafka_odroid_multi.json"
 VS_KAFKA_TOPIC="storm-vs"
 LR_KAFKA_TOPIC="flink-lr"
 SYN_KAFKA_TOPIC="liebre-syn"
@@ -57,8 +57,8 @@ done
 
 set -x 
 
-ssh "$KAFKA_HOST" "/home/dimitris/lachesis-experiments/scheduling-queries/kafka-source/start-source.sh --topic $VS_KAFKA_TOPIC --configFile $STORM_VS_CONFIG ${VS_ARGS[@]} &>> $KAFKA_COMMAND_LOG &"
+ssh "$KAFKA_HOST" "BASEDIRHERE/scheduling-queries/kafka-source/start-source.sh --topic $VS_KAFKA_TOPIC --configFile $STORM_VS_CONFIG ${VS_ARGS[@]} &>> $KAFKA_COMMAND_LOG &"
 
-ssh "$KAFKA_HOST" "/home/dimitris/lachesis-experiments/scheduling-queries/kafka-source/start-source.sh --topic $LR_KAFKA_TOPIC --configFile $FLINK_LR_CONFIG ${LR_ARGS[@]} &>> $KAFKA_COMMAND_LOG &"
+ssh "$KAFKA_HOST" "BASEDIRHERE/scheduling-queries/kafka-source/start-source.sh --topic $LR_KAFKA_TOPIC --configFile $FLINK_LR_CONFIG ${LR_ARGS[@]} &>> $KAFKA_COMMAND_LOG &"
 
-ssh "$KAFKA_HOST" "/home/dimitris/lachesis-experiments/scheduling-queries/kafka-source/start-source.sh --topic $SYN_KAFKA_TOPIC --inputFile DUMMY ${SYN_ARGS[@]}  &>> $KAFKA_COMMAND_LOG &"
+ssh "$KAFKA_HOST" "BASEDIRHERE/scheduling-queries/kafka-source/start-source.sh --topic $SYN_KAFKA_TOPIC --inputFile DUMMY ${SYN_ARGS[@]}  &>> $KAFKA_COMMAND_LOG &"
