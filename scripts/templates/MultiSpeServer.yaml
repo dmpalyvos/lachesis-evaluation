@@ -4,7 +4,6 @@ executor_script: 'scripts/server_multi_do_run.sh'
 dimensions:
   schema: variant.rate
   rate:
-    - 50
     - 60
     - 70
     - 80
@@ -29,8 +28,8 @@ variants:
     scheduler_command: >
       sudo java -Dname=Lachesis -cp ./lachesis/lachesis-0.1.jar
       io.palyvos.scheduler.integration.ThreeSpeIntegration --cgroupPolicy spe --cgroupPeriod 100 --minPriority 19 
-      --maxPriority -20  --statisticsFolder {statistics_folder} --statisticsHost {statistics_host} --period 1 
-      --worker VoipStream.VoipStream --worker TaskManagerRunner --worker queries.synthetic.queries.Chain --queryGraph BASEDIRHERE/scheduling-queries/storm_queries/VoipStream/voip_stream.yaml --queryGraph {statistics_folder}/query_dag.yaml --policy metric:TASK_QUEUE_SIZE_FROM_SUBTASK_DATA:true 
+      --maxPriority -20  --statisticsFolder {statistics_folder} --statisticsHost {statistics_host} --period 1 --window 30
+      --worker VoipStream.VoipStream --worker TaskManagerRunner --worker queries.synthetic.queries.Chain --queryGraph BASEDIRHERE/scheduling-queries/storm_queries/VoipStream/voip_stream.yaml --queryGraph {statistics_folder}/query_dag.yaml --policy task-input-output-queue
 
 kafka_start_script: "./scripts/templates/helpers/multi-3-spe/helper-start-kafkas.sh"
 kafka_stop_script: "./scripts/templates/helpers/multi-3-spe/helper-stop-kafkas.sh"

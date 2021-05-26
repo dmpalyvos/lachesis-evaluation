@@ -70,7 +70,7 @@ def aggregate_rep(parameter, extra_params, aggfunc=np.mean):
 
 def aggregate_rep_spe(parameter, extra_params, aggfunc=np.mean):
     return get(parameter=parameter).groupby(['parameter', 'variant', 'rep', 'spe', 'node'] + extra_params)\
-                                    .aggregate({'value': aggfunc})\
+                                    .aggregate({'value': np.mean})\
                                     .groupby(['parameter', 'variant', 'rep', 'spe'] + extra_params)\
                                     .aggregate({'value': aggfunc})\
                                     .reset_index()
@@ -471,6 +471,49 @@ def multiSpePerformancePlot(rates, export=False, ncol=2, bbox=(.8, 0), bottom=0.
     g.fig.subplots_adjust(bottom=bottom)
     save_fig(g.fig, 'summary', experimentId(), export)
 
+
+def multiSpe3PerformancePlot(rates, export=False, ncol=2, bbox=(.55, 0), bottom=0.125):
+
+    raw_data = []
+    
+    # Hack: Liebre does not place SPE name in data, but storm and flink do, so set all other to liebre
+    DATA.loc[DATA.parameter.isin(['throughput', 'latency', 'end-latency']) & (DATA.spe != 'Storm') & (DATA.spe != 'Flink'), 'spe'] = 'Liebre'
+    
+    raw_data.append(aggregate_rep_spe('throughput', ['rate'], aggfunc=sum_dropna))
+    raw_data.append(aggregate_rep_spe('latency', ['rate']))
+    raw_data.append(aggregate_rep_spe('end-latency', ['rate']))
+    plot_data = pd.concat(raw_data)
+    print(f'Plotting rates', rates)
+    plot_data = plot_data[(plot_data.rate >= rates[0]) & (plot_data.rate <= rates[1])]
+    g = sns.relplot(data=plot_data, x='rate', y='value', hue='variant', col='spe',
+                    col_order=['Storm', 'Flink', 'Liebre'],
+                    row='parameter',
+                    row_order=['throughput', 'latency', 'end-latency'],
+                    height=2, aspect=1.75, kind='line', style='variant', markers=True, 
+                     facet_kws={'sharey': 'none', 'legend_out': False})
+
+    
+    
+    for i, name in enumerate(['Storm (VS)', 'Flink (LR)', 'Liebre (SYN)']):
+        g.axes[0, i].set_title(name)
+        g.axes[1, i].set_title('')
+        g.axes[2, i].set_title('')
+        g.axes[0, 0].set_ylabel('Throughput (t/s)')
+        g.axes[1, 0].set_ylabel('Latency (sec)')
+        g.axes[1, i].set_yscale('log')
+        g.axes[2, 0].set_ylabel('End-to-end Latency (s)')
+        g.axes[2, i].set_yscale('log')
+        g.axes[2, i].set_xlabel('Input Rate (%)')
+    sns.despine()
+    
+    
+    h,l = g.axes.flat[0].get_legend_handles_labels()
+    g.axes.flat[0].legend_.remove()
+    g.fig.legend(h,l, ncol=ncol, bbox_to_anchor=bbox, frameon=False) 
+    g.fig.subplots_adjust(bottom=bottom)
+    save_fig(g.fig, 'summary', experimentId(), export)
+
+
 def parallelismPerformancePlot(rates, metric, metric_data, metric_title, metric_scale='linear', export=False):
     
     def set_axis_info(g, idx, title, xlabel, ylabel, yscale='linear'):
@@ -517,6 +560,7 @@ PLOT_FUNCTIONS = {
     'qs-hist':      lambda: queueSizeBoxPlots(export=True),
     'multi-policy': lambda: multiPolicyPerformancePlot(rates=(-np.inf, np.inf), export=True),
     'multi-spe': lambda: multiSpePerformancePlot(rates=(-np.inf, np.inf), variants=['OS', 'LACHESIS'], export=True, bbox=(.7, 0), bottom=0.1),
+    'multi-3-spe': lambda: multiSpe3PerformancePlot(rates=(-np.inf, np.inf), export=True),
     'distributed': lambda: parallelismPerformancePlot(rates=(-np.inf, np.inf), metric='sink-throughput', 
                      metric_data=aggregate_rep('sink-throughput', ['rate', 'parallelism'], sum_dropna),
                      metric_title='Sink Throughput', export=True)
