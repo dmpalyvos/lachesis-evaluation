@@ -113,7 +113,8 @@ public class LinearRoad {
         ///
 
         positionBranch.union(speedBranch, countBranch)
-                .addSink(new DrainSink<>(configuration.getStatisticsFolder())).name("sink")
+                .addSink(new DrainSink<>(configuration.getStatisticsFolder(),
+                    configuration.sampleLatency())).name("sink")
                 .setParallelism(Topology.getParallelismHint(configuration, "sink"));
 
         // start!

@@ -28,8 +28,7 @@ public class Topology {
     // set the buffer size to avoid excessive buffering at the spout
     Config config = new Config();
     config.put(Stats.STATS_FOLDER_KEY, configuration.getStatisticsFolder());
-
-    // submit it to storm
+    config.put(Stats.SAMPLE_LATENCY_KEY, configuration.sampleLatency());
     if (configuration.workers() > 0) {
       config.setNumWorkers(configuration.workers());
       submitCluster(topology, config);
@@ -41,14 +40,6 @@ public class Topology {
     // XXX force exit because the JVM may hang waiting for a dangling
     // reference...
     System.exit(0);
-  }
-
-  private static void submitCluster(StormTopology topology, Config config) {
-    try {
-      StormSubmitter.submitTopology(TOPOLOGY_NAME, config, topology);
-    } catch (Exception e) {
-      throw new RuntimeException(e);
-    }
   }
 
   private static void submitLocal(long runTime, StormTopology topology, Config config) {
@@ -67,6 +58,14 @@ public class Topology {
       cluster.shutdown();
     } catch (Exception e) {
       LOG.error(e.getMessage());
+    }
+  }
+
+  private static void submitCluster(StormTopology topology, Config config) {
+    try {
+      StormSubmitter.submitTopology(TOPOLOGY_NAME, config, topology);
+    } catch (Exception e) {
+      throw new RuntimeException(e);
     }
   }
 }

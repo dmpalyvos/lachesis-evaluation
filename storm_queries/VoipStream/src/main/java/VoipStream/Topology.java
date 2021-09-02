@@ -32,6 +32,7 @@ public class Topology {
     // set the buffer size to avoid excessive buffering at the spout
     Config config = new Config();
     config.put(Stats.STATS_FOLDER_KEY, configuration.getStatisticsFolder());
+    config.put(Stats.SAMPLE_LATENCY_KEY, configuration.sampleLatency());
     if (configuration.workers() > 0) {
       config.setNumWorkers(configuration.workers());
       submitCluster(topology, config);

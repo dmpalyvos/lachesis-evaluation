@@ -95,8 +95,8 @@ def aggregate_node_rep(parameter, extra_params, aggfunc, nodefunc, new_parameter
 def save_fig(fig, name, experiment, export=False):
     
     def do_save_fig(fig, path):
+        print(f'Saving {path}')
         fig.savefig(path, pad_inches=.1, bbox_inches='tight',)
-        print(f'Saved {path}')
         
     filename = f'{experiment}_{name}.pdf'
     do_save_fig(fig, f'{REPORT_FOLDER}/{filename}')
@@ -145,6 +145,22 @@ def createTables(index=['variant'], parameters=['throughput', 'latency', 'end-la
             print(f'Failed to create table {parameter}')
             
     
+def compute_latency_percentiles(parameter, aggfuncs, names):
+    if len(aggfuncs) != len(names):
+        raise ValueError('len must be equal')
+    dfs = []
+    for aggfunc, name in zip(aggfuncs, names):
+        df = get(parameter=parameter).groupby(['experiment', 'rate', 'variant']).aggregate({'value': aggfunc}).copy().reset_index()
+        if len(df) == 0:
+            continue
+        df['parameter'] = parameter + '-' + name
+        df['rep'] = 1
+        df['node'] = 'default'
+        df['t'] = 1
+        dfs.append(df)
+    return dfs
+
+
 
 def computeAverageLatency(latency):
     global DATA
@@ -242,6 +258,8 @@ def loadData(folder):
         df['rep'] = df['rep'].astype(int)
         df['value'] = df['value'].astype(float)
         df['t'] = df['t'].astype(int)
+        if len(df) == 0:
+            return df
         df = df.groupby(['rep']).apply(subtractMin, key='t')
 #         print(file)
 #         display((df.groupby(['t', 'rep'])['t'].size()))
@@ -296,14 +314,22 @@ def loadData(folder):
     replaceParameter(DATA, 'end-latency', 'end-latency-raw')
         
     # Preprocess
-    DATA.loc[DATA['parameter'].isin(['latency', 'end-latency']), 'value'] /= 1e3 # Convert latency to seconds
-    DATA.loc[(DATA['parameter'].isin(['latency', 'end-latency'])) & (DATA['value'] < 0), 'value'] = np.nan 
+    DATA.loc[DATA['parameter'].isin(['latency', 'end-latency', 'latency-sampled', 'end-latency-sampled']), 'value'] /= 1e3 # Convert latency to seconds
+    DATA.loc[(DATA['parameter'].isin(['latency',  'end-latency', 'latency-sampled', 'end-latency-sampled']) & (DATA['value'] < 0)), 'value'] = np.nan 
     
+    DATA['spe'] = DATA.node.str.split('\.', expand=True)[0].replace('taskmanager', 'Flink')
+
+    
+    latency_percentiles = compute_latency_percentiles('latency-sampled', [lambda x: np.quantile(x.dropna(), .99), lambda x: np.quantile(x.dropna(), .999)], ['p99', 'p999'])
+    DATA = pd.concat([DATA] + latency_percentiles, ignore_index=True, sort=False)
+    end_latency_percentiles = compute_latency_percentiles('end-latency-sampled', [lambda x: np.quantile(x.dropna(), .99), lambda x: np.quantile(x.dropna(), .999)], ['p99', 'p999'])
+    DATA = pd.concat([DATA] + end_latency_percentiles, ignore_index=True, sort=False)
+    
+#     assert set(DATA.variant.unique()) == set(VARIANT_ORDER), f'Data has different variants: {set(DATA.variant.unique())} but requested {VARIANT_ORDER}'
     VARIANT_ORDER = sorted(list(DATA.variant.unique()), key=variantOrderKey)
     print(f'Variant order = {VARIANT_ORDER}')
     DATA.variant = DATA.variant.astype("category")
-    DATA.variant.cat.set_categories(VARIANT_ORDER, inplace=True)
-    DATA['spe'] = DATA.node.str.split('\.', expand=True)[0].replace('taskmanager', 'Flink')
+    DATA.variant = DATA.variant.cat.set_categories(VARIANT_ORDER) #CHECK IF WORKS!
     
     print()
     print(f'Warmup = {int(WARMUP_PERCENTAGE*100)}% / Cooldown = {int(COOLDOWN_PERCENTAGE*100)}%')
@@ -547,6 +573,35 @@ def parallelismPerformancePlot(rates, metric, metric_data, metric_title, metric_
     save_fig(g.fig, f'summary_{metric}', experimentId(), export=export)
 
 
+def latency_percentile_box(parameter='latency', rates=(-np.inf, np.inf), legend=True, ncol=3, bbox=(0.8, 0), bottom=0.25, export=False):
+    query_names = {'StormVoipStreamKafka': 'b) VS – Storm', 'StormLinearRoadKafka': 'a) LR – Storm',
+                   'FlinkVoipStreamKafka': 'd) VS – Flink', 'FlinkLinearRoadKafka': 'c) LR – Flink'
+                  }
+    plot_data = get(parameter=f'{parameter}-sampled')
+    plot_data = plot_data[(plot_data.rate >= rates[0]) & (plot_data.rate <= rates[1])]
+
+    width = 6
+    height = 2
+    aspect = width/height
+    
+    g = sns.catplot(data=plot_data, x='rate', y='value', kind='boxen', hue='variant', linewidth=0.5, scale='linear',
+                    height=height, aspect=aspect, legend_out=False, legend=legend)
+    
+    g.axes.flat[0].set_yscale('log')
+    g.set_ylabels('Latency (s)')
+    g.set_xlabels('Rate (t/s)')
+    
+    sns.despine()
+    if legend:
+        h,l = g.axes.flat[0].get_legend_handles_labels()
+        g.axes.flat[0].legend_.remove()
+        g.fig.legend(h,l, ncol=ncol, bbox_to_anchor=bbox, frameon=False) 
+        g.fig.subplots_adjust(bottom=bottom)
+    g.fig.suptitle(query_names[plot_data.experiment.unique()[0]], fontsize=14, y=1.05)
+    save_fig(g.fig, f'{parameter}-percentiles', experimentId(), export=export)
+
+
+
 PLOT_FUNCTIONS = {
     'liebre-20q-period': lambda: basicPerformancePlot(rates=(-np.inf, np.inf), metric='max-latency', metric_scale='log',
                      metric_data=aggregate_node_rep('latency', ['rate'], np.mean, np.max, 'max-latency'),
@@ -563,8 +618,13 @@ PLOT_FUNCTIONS = {
     'multi-3-spe': lambda: multiSpe3PerformancePlot(rates=(-np.inf, np.inf), export=True),
     'distributed': lambda: parallelismPerformancePlot(rates=(-np.inf, np.inf), metric='sink-throughput', 
                      metric_data=aggregate_rep('sink-throughput', ['rate', 'parallelism'], sum_dropna),
-                     metric_title='Sink Throughput', export=True)
-                 }
+                     metric_title='Sink Throughput', export=True),
+    'latency-percentiles': lambda: latency_percentile_box(parameter='latency', rates=(-np.inf, np.inf), export=True, legend=False),
+    'latency-percentiles-legend': lambda: latency_percentile_box(parameter='latency', rates=(-np.inf, np.inf), export=True, legend=True),
+    'end-latency-percentiles': lambda: latency_percentile_box(parameter='end-latency', rates=(-np.inf, np.inf), export=True, legend=False),
+    'tables': lambda: createTables(),
+    'tables-percentiles': lambda: createTables(parameters=['latency-sampled-p99', 'latency-sampled-p999', 'end-latency-sampled-p99', 'end-latency-sampled-p999'])
+}
 
 if __name__ == '__main__':
 

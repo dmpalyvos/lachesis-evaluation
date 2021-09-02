@@ -14,6 +14,10 @@ public class Stats {
   public static final String LATENCY_FILE = "latency-raw";
   public static final String END_LATENCY_FILE = "end-latency-raw";
 
+  public static final int LATENCY_SAMPLE_EVERY = 100;
+  public static final String LATENCY_SAMPLED_FILE = "latency-sampled";
+  public static final String END_LATENCY_SAMPLED_FILE = "end-latency-sampled";
+
   public static String statisticsFile(String folder, RuntimeContext context,
       String filename) {
     return statisticsFile(context.getTaskName(), context.getIndexOfThisSubtask(), folder, filename);

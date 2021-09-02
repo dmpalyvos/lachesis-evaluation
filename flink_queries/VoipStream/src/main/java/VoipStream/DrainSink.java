@@ -10,12 +10,14 @@ import util.CountStat;
 import util.Log;
 import util.MetricGroup;
 import util.Sampler;
+import util.SamplingTimestampedRecorder;
 import util.Stats;
 
 public class DrainSink<T extends Tuple> extends RichSinkFunction<T> {
 
   private static final Logger LOG = Log.get(DrainSink.class);
   private final String statisticsFolder;
+  private final boolean sampleLatency;
   private Sampler latency;
   private transient AverageGauge latencyGauge;
   private transient AverageGauge latencyGaugeExt;
@@ -24,8 +26,13 @@ public class DrainSink<T extends Tuple> extends RichSinkFunction<T> {
   private transient AvgStat endLatencyStat;
   private transient CountStat sinkThroughputStat;
 
-  public DrainSink(String statisticsFolder) {
+  private transient SamplingTimestampedRecorder latencySampler;
+  private transient SamplingTimestampedRecorder endLatencySampler;
+
+
+  public DrainSink(String statisticsFolder, boolean sampleLatency) {
     this.statisticsFolder = statisticsFolder;
+    this.sampleLatency = sampleLatency;
   }
 
   @Override
@@ -39,6 +46,15 @@ public class DrainSink<T extends Tuple> extends RichSinkFunction<T> {
     this.endLatencyStat = new AvgStat(Stats.statisticsFile(statisticsFolder, getRuntimeContext(), Stats.END_LATENCY_FILE));
     this.sinkThroughputStat = new CountStat(Stats.statisticsFile(statisticsFolder, getRuntimeContext(), Stats.SINK_THROUGHPUT_FILE));
 
+    if (sampleLatency) {
+      this.latencySampler = new SamplingTimestampedRecorder(
+          Stats.statisticsFile(statisticsFolder, getRuntimeContext(), Stats.LATENCY_SAMPLED_FILE),
+          Stats.LATENCY_SAMPLE_EVERY);
+      this.endLatencySampler = new SamplingTimestampedRecorder(
+          Stats.statisticsFile(statisticsFolder, getRuntimeContext(),
+              Stats.END_LATENCY_SAMPLED_FILE),
+          Stats.LATENCY_SAMPLE_EVERY);
+    }
   }
 
   @Override
@@ -57,6 +73,11 @@ public class DrainSink<T extends Tuple> extends RichSinkFunction<T> {
     latencyStat.add(latency);
     latencyGaugeExt.add(latency_ext);
     endLatencyStat.add(latency_ext);
+
+    if (sampleLatency) {
+      latencySampler.add(latency);
+      endLatencySampler.add(latency_ext);
+    }
   }
 
   @Override

@@ -8,6 +8,7 @@ import org.apache.flink.shaded.jackson2.com.fasterxml.jackson.databind.ObjectMap
 public class Configuration {
 
   public static final String USAGE = "Parameters: --rate <generation_rate> --time <running_time_sec> --conf <configuration_json_file> --statisticsFolder <statistics_folder> [--bufferTimeout <buffer_timeout_ms>] [--kafkaHost <kafka_host>]";
+  private final boolean sampleLatency;
   private long gen_rate;
   private long run_time;
   private JsonNode configuration;
@@ -15,19 +16,20 @@ public class Configuration {
   private String kafkaHost;
   private String statisticsFolder;
 
-  public Configuration(long _gen_rate, long _run_time, String _path, long _bufferTimeout, String _kafkaHost, String _statisticsFolder)
+  public Configuration(long _gen_rate, long _run_time, String _path, long _bufferTimeout, String _kafkaHost, String _statisticsFolder, boolean _sampleLatency)
       throws IOException {
     gen_rate = _gen_rate;
     run_time = _run_time;
     bufferTimeout = _bufferTimeout;
     kafkaHost = _kafkaHost;
     this.statisticsFolder = _statisticsFolder;
+    this.sampleLatency = _sampleLatency;
     ObjectMapper mapper = new ObjectMapper();
     configuration = mapper.readTree(new File(_path));
   }
 
   public static Configuration fromArgs(String[] args) throws IOException {
-    if (args.length != 6 && args.length != 8 && args.length != 10 && args.length != 12) {
+    if (args.length != 6 && args.length != 8 && args.length != 10 && args.length != 12 && args.length != 14) {
       System.err.println(USAGE);
       System.exit(1);
     }
@@ -38,6 +40,7 @@ public class Configuration {
     long bufferTimeout = -1;
     String kafkaHost = null;
     String statisticsFolder = null;
+    boolean sampleLatency = false;
     // parse command line arguments
     for (int i = 0; i < args.length; i += 2) {
       if (args[i].equals("--rate")) {
@@ -52,6 +55,8 @@ public class Configuration {
         kafkaHost = args[i + 1];
       } else if (args[i].equals("--statisticsFolder")) {
         statisticsFolder = args[i + 1];
+      } else if (args[i].equals("--sampleLatency")) {
+        sampleLatency = Boolean.valueOf(args[i + 1]);
       } else {
         isCorrect = false;
       }
@@ -61,7 +66,7 @@ public class Configuration {
       System.err.println(USAGE);
       System.exit(1);
     }
-    return new Configuration(gen_rate, run_time, path, bufferTimeout, kafkaHost, statisticsFolder);
+    return new Configuration(gen_rate, run_time, path, bufferTimeout, kafkaHost, statisticsFolder, sampleLatency);
   }
 
   public long getGenRate() {
@@ -86,5 +91,9 @@ public class Configuration {
 
   public String getStatisticsFolder() {
     return statisticsFolder;
+  }
+
+  public boolean sampleLatency() {
+    return sampleLatency;
   }
 }
