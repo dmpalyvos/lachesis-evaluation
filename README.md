@@ -1,6 +1,6 @@
 # Evaluation Artifacts for Lachesis
 
-This repository contains all the necessary scripts to execute the experimental evaluation of: ***"Lachesis: A Standalone Stream-Aware OS Scheduling Framework"***. 
+This repository contains all the necessary scripts to execute the experimental evaluation of: ***"Lachesis: A Middleware for Customizing OS Scheduling of Stream Processing Queries"***. 
 
 The implementation of Lachesis is in a separate repository, [acessible here](https://github.com/dmpalyvos/lachesis).
 
@@ -88,18 +88,17 @@ To be able to run distributed experiments, you need to also edit `lachesis-exper
 
 | Figures | SPE | SPE Mode | Leader | Graphite | Source | Script | Args | Prep
 --------- | ---- | -------- | ------------------| --------- | ------ | --- | --- | --- | 
-| 7, 8 | Storm 1.1.0 | local | - | local | local | edgewise-etl.sh | reps duration | GL
-| 9, 10 | Storm 1.1.0 | local | - | local | local | edgewise-stats.sh | reps duration | GL
-| 11 | Storm 1.2.3 | local | - | local | kafka (remote) | storm-lr.sh | reps duration kafka_host | GL, K
-| 12 | Storm 1.2.3 | local | - | local | kafka (remote) | storm-vs.sh | reps duration kafka_host | GL, K
-| 13 | Flink 1.11.2 | cluster | local | local | kafka (remote) | flink-lr.sh | reps duration kafka_host | GL, K
-| 14 | Flink 1.11.2 | cluster | local | local | kafka (remote) | flink-vs.sh | reps duration kafka_host | GL, K
-| 15 | Liebre 0.1.2 | local | - | local | kafka (remote) | liebre-20q.sh | reps duration kafka_host | GL, K
-| 16 | Liebre 0.1.2 | local | - | local | kafka (remote) | liebre-20q-period.sh | reps duration kafka_host | GL, K
-| 17 | Liebre 0.1.2 | local | - | local | kafka (remote) | liebre-20q-blocking.sh | reps duration kafka_host | GL, K
-| 18 | Storm 1.2.3, Flink 1.11.2 | local (Storm), cluster (Flink) | local | remote | kafka (remote) | multi-spe.sh | reps duration kafka_host graphite_host | GR, K, M
-| 19 | Storm 1.2.3, Flink 1.11.2 | cluster | remote | remote | kafka (remote) | storm-dist-lr.sh | reps duration kafka_host graphite_host | GR, K, SD
-| 19 | Flink 1.11.2 | cluster | remote | remote | kafka (remote) | flink-dist-lr.sh | reps duration kafka_host graphite_host | GR, K, FD
+| 5, 6 | Storm 1.1.0 | local | - | local | local | edgewise-etl.sh | reps duration | GL
+| 7, 8 | Storm 1.1.0 | local | - | local | local | edgewise-stats.sh | reps duration | GL
+| 1, 9, 13a | Storm 1.2.3 | local | - | local | kafka (remote) | storm-lr.sh | reps duration kafka_host | GL, K
+| 10, 13b | Storm 1.2.3 | local | - | local | kafka (remote) | storm-vs.sh | reps duration kafka_host | GL, K
+| 11, 13c | Flink 1.11.2 | cluster | local | local | kafka (remote) | flink-lr.sh | reps duration kafka_host | GL, K
+| 12, 13d | Flink 1.11.2 | cluster | local | local | kafka (remote) | flink-vs.sh | reps duration kafka_host | GL, K
+| 14 | Liebre 0.1.2 | local | - | local | kafka (remote) | liebre-20q.sh | reps duration kafka_host | GL, K
+| 15 | Liebre 0.1.2 | local | - | local | kafka (remote) | liebre-20q-period.sh | reps duration kafka_host | GL, K
+| 16 | Liebre 0.1.2 | local | - | local | kafka (remote) | liebre-20q-blocking.sh | reps duration kafka_host | GL, K
+| 17 | Storm 1.2.3, Flink 1.11.2 | cluster | remote | remote | kafka (remote) | storm-dist-lr.sh, flink-dist-lr.sh | reps duration kafka_host graphite_host | GR, K, SD
+| 18 | Storm 1.2.3, Flink 1.11.2, Liebre 0.1.2 | local (Storm), cluster (Flink) | local | remote | kafka (remote) | multi-spe-server.sh | reps duration kafka_host graphite_host | GR, K, M
 
 ### Preparation Cheatsheet
 

@@ -601,7 +601,38 @@ def latency_percentile_box(parameter='latency', rates=(-np.inf, np.inf), legend=
     save_fig(g.fig, f'{parameter}-percentiles', experimentId(), export=export)
 
 
+def paperIntroPlot(rates, order=['OS', 'LACHESIS'], export=False):
+    
+    def set_axis_info(g, idx, title, xlabel, ylabel, yscale='linear'):
+        g.axes.flat[idx].set_title(title)
+        g.axes.flat[idx].set_xlabel(xlabel)
+        g.axes.flat[idx].set_ylabel(ylabel)
+        g.axes.flat[idx].set_yscale(yscale)
+    
+    raw_data = []
+    raw_data.append(aggregate_rep('throughput', ['rate'], sum_dropna))
+    print('throughput')
+    raw_data.append(aggregate_rep('latency', ['rate']))
+    print('latency')
+    plot_data = pd.concat(raw_data)
+    plot_data = plot_data[plot_data['variant'].isin(order)]
+    print(f'Plotting rates', rates)
+    plot_data = plot_data[(plot_data.rate >= rates[0]) & (plot_data.rate <= rates[1])].dropna()
+    g = sns.relplot(data=plot_data, x='rate', y='value', col='parameter', height=2.5, aspect=1.5,
+                 hue='variant', hue_order=order, kind='line', style='variant', style_order=order, markers=True, dashes=False,
+                 ci=None, facet_kws={'sharey': False, 'legend_out': False}, markersize=7)
+    set_axis_info(g, 0, 'Average Throughput (tuples/sec)', 'Input Rate (tuples/sec)', '')
+    g.axes.flat[0].set_ylim(top=7000)
+    set_axis_info(g, 1, 'Average Latency (sec)', 'Input Rate (tuples/sec)', '', 'log')
+    h,l = g.axes.flat[0].get_legend_handles_labels()
+    g.axes.flat[0].legend_.remove()
+    g.fig.legend(h, ['Default OS Scheduling', 'Custom Scheduling (Lachesis)'], ncol=2, bbox_to_anchor=(.87, 0), frameon=True, fontsize=12)
+    g.fig.subplots_adjust(bottom=0.2)
+    sns.despine()
+    save_fig(g.fig, f'intro-performance', experimentId(), export=export)
+    
 
+    
 PLOT_FUNCTIONS = {
     'liebre-20q-period': lambda: basicPerformancePlot(rates=(-np.inf, np.inf), metric='max-latency', metric_scale='log',
                      metric_data=aggregate_node_rep('latency', ['rate'], np.mean, np.max, 'max-latency'),
@@ -623,7 +654,8 @@ PLOT_FUNCTIONS = {
     'latency-percentiles-legend': lambda: latency_percentile_box(parameter='latency', rates=(-np.inf, np.inf), export=True, legend=True),
     'end-latency-percentiles': lambda: latency_percentile_box(parameter='end-latency', rates=(-np.inf, np.inf), export=True, legend=False),
     'tables': lambda: createTables(),
-    'tables-percentiles': lambda: createTables(parameters=['latency-sampled-p99', 'latency-sampled-p999', 'end-latency-sampled-p99', 'end-latency-sampled-p999'])
+    'tables-percentiles': lambda: createTables(parameters=['latency-sampled-p99', 'latency-sampled-p999', 'end-latency-sampled-p99', 'end-latency-sampled-p999']),
+    'intro': lambda: paperIntroPlot(rates=(-np.inf, np.inf), export=True)
 }
 
 if __name__ == '__main__':
