@@ -643,7 +643,7 @@ PLOT_FUNCTIONS = {
     'qs-comparison': lambda: basicPerformancePlot(rates=(-np.inf, np.inf), metric='input-queue', 
                      metric_data=aggregate_node_rep('input-queue', ['rate'], np.mean, relative_variance),
                     metric_title='QS Goal', export=True, ncol=3, bbox=(.8, 0), bottom=0.125),
-    'qs-hist':      lambda: queueSizeBoxPlots(export=True),
+    'qs-hist':      lambda: queueSizeBoxPlots(rates=(-np.inf, np.inf), export=True),
     'multi-policy': lambda: multiPolicyPerformancePlot(rates=(-np.inf, np.inf), export=True),
     'multi-spe': lambda: multiSpePerformancePlot(rates=(-np.inf, np.inf), variants=['OS', 'LACHESIS'], export=True, bbox=(.7, 0), bottom=0.1),
     'multi-3-spe': lambda: multiSpe3PerformancePlot(rates=(-np.inf, np.inf), export=True),
