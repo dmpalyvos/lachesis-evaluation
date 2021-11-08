@@ -70,6 +70,15 @@ The only arguments are (1) the hostname/IP of the node that will be running the 
 
 To be able to run distributed experiments, you need to also edit `lachesis-experiments/distributed-flink-1.11.2/conf/workers` and add the hostnames of at least 4 nodes that are also setup with the above procedure.
 
+#### Storm JAVA_HOME
+
+The script responsible for running Storm experiments expects the Java installation to be at `/usr/lib/jvm/java-8-openjdk-armhf`. If this is not the case in your setup (e.g., because the machine is `amd64` instead of `armhf`), please change the following definition at **Line 70 in `scripts/storm_do_run.sh`** to point to the top-level directory of your Java 8 installation:
+
+```bash
+export JAVA_HOME=/usr/lib/jvm/java-8-openjdk-armhf
+```
+
+
 ## Running Experiments
 
 **DISCLAIMER**
@@ -81,7 +90,7 @@ To be able to run distributed experiments, you need to also edit `lachesis-exper
 - The table below describes the exact configurations of each experiment, the paper figures that it generates, the CLI arguments of each script, as well as the preparation actions you need to do before starting the experiment. The durations are always specified in minutes. 
 - In the paper, reps >= 5 and duration >= 10 min for all experiments.
 - When passing hostnames as arguments, it is safer to use `$(hostname)` instead of `localhost` to make sure the scripts work without issues.
-
+- **The reproduction scripts below should be run from inside the `scheduling-queries` directory, e.g., `./reproduce/edgewise-etl.sh`**
 
 
 ### Detailed Experiment Configurations
@@ -158,14 +167,6 @@ cd lachesis-experiments/distributed-apache-storm-1.2.3/bin
 ```
 
 ### Troubleshooting
-
-#### Storm JAVA_HOME
-
-If you get errors about `JAVA_HOME` in Storm experiments, change the directory in `scripts/storm_do_run.sh` L70 
-```bash
-export JAVA_HOME=/usr/lib/jvm/java-8-openjdk-armhf
-```
-so that it points to your Java install.
 
 
 #### Python Dependency Installation Issues
