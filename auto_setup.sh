@@ -38,7 +38,7 @@ cp -R flink-1.11.2 distributed-flink-1.11.2
 rm flink-1.11.2-bin-scala_2.11.tgz
 
 # Storm 1.2.3
-wget https://ftp.acc.umu.se/mirror/apache.org/storm/apache-storm-1.2.3/apache-storm-1.2.3.tar.gz
+wget https://archive.apache.org/dist/storm/apache-storm-1.2.3/apache-storm-1.2.3.tar.gz
 tar xvf apache-storm-1.2.3.tar.gz
 cp -R apache-storm-1.2.3 distributed-apache-storm-1.2.3
 "$COPY_CONF" scheduling-queries/configs/storm-1.2.3.yaml apache-storm-1.2.3/conf/storm.yaml "$LOCAL_LEADER" "$LOCAL_GRAPHITE"
@@ -59,7 +59,7 @@ rm apache-storm-edgewise-1.1.0.zip
 
 echo "Downloading kafka..."
 cd "$script_dir/.."
-wget https://ftp.acc.umu.se/mirror/apache.org/kafka/2.7.0/kafka_2.13-2.7.0.tgz
+wget https://archive.apache.org/dist/kafka/2.7.0/kafka_2.13-2.7.0.tgz
 tar -xzf kafka_2.13-2.7.0.tgz
 echo 'auto.create.topics.enable=false' >> kafka_2.13-2.7.0/config/server.properties
 
