@@ -72,7 +72,7 @@ To be able to run distributed experiments, you need to also edit `lachesis-exper
 
 #### Storm JAVA_HOME
 
-The script responsible for running Storm experiments expects the Java installation to be at `/usr/lib/jvm/java-8-openjdk-armhf`. If this is not the case in your setup (e.g., because the machine is `amd64` instead of `armhf`), please change the following definition at **Line 70 in `scripts/storm_do_run.sh`** to point to the top-level directory of your Java 8 installation:
+The script responsible for running Storm experiments expects the Java installation to be at `/usr/lib/jvm/java-8-openjdk-armhf`. If this is not the case in your setup (e.g., because the machine is `amd64` instead of `armhf`), please change the following definition at **Line 70 in `lachesis-experiments/scheduling-queries/scripts/storm_do_run.sh`** to point to the top-level directory of your Java 8 installation:
 
 ```bash
 export JAVA_HOME=/usr/lib/jvm/java-8-openjdk-armhf
