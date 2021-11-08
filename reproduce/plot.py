@@ -406,8 +406,8 @@ def basicPerformancePlot(rates, metric, metric_data, metric_title, metric_scale=
     save_fig(g.fig, f'{metric}', experimentId(), export=export)
 
 
-def queueSizeBoxPlots(rates, export):
-    aggregated = DATA[(DATA.parameter == 'input-queue') & (DATA.rate.isin(rates))]
+def queueSizeBoxPlots(export):
+    aggregated = DATA[DATA.parameter == 'input-queue']
     aggregated = aggregated[~(aggregated.node.str.contains('system|spout'))].copy()
     aggregated = aggregated.groupby(['rate', 'variant', 'node'])\
                                              .aggregate({'value': np.mean}).reset_index()
@@ -643,7 +643,7 @@ PLOT_FUNCTIONS = {
     'qs-comparison': lambda: basicPerformancePlot(rates=(-np.inf, np.inf), metric='input-queue', 
                      metric_data=aggregate_node_rep('input-queue', ['rate'], np.mean, relative_variance),
                     metric_title='QS Goal', export=True, ncol=3, bbox=(.8, 0), bottom=0.125),
-    'qs-hist':      lambda: queueSizeBoxPlots(rates=(-np.inf, np.inf), export=True),
+    'qs-hist':      lambda: queueSizeBoxPlots(export=True),
     'multi-policy': lambda: multiPolicyPerformancePlot(rates=(-np.inf, np.inf), export=True),
     'multi-spe': lambda: multiSpePerformancePlot(rates=(-np.inf, np.inf), variants=['OS', 'LACHESIS'], export=True, bbox=(.7, 0), bottom=0.1),
     'multi-3-spe': lambda: multiSpe3PerformancePlot(rates=(-np.inf, np.inf), export=True),
