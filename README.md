@@ -20,6 +20,7 @@ The experiments have been executed on Odroid-XU4 devices running Ubuntu 18.04.5 
 The following are some minimum system requirements:
 
 - Java 8
+- maven
 - Python 3.7 
 - docker, docker-compose (see [instructions](https://docs.docker.com/engine/install/ubuntu/) and [post-installation](https://docs.docker.com/engine/install/linux-postinstall/))
 - cgroup-tools (`sudo apt-get install cgroup-tools` in Ubuntu)
